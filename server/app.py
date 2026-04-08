@@ -98,13 +98,5 @@ def main(host: str = "0.0.0.0", port: int = 8000):
 
     uvicorn.run(app, host=host, port=port)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-# if __name__ == "__main__":
-#     import argparse
-
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--host", type=str, default="[IP_ADDRESS]")
-#     parser.add_argument("--port", type=int, default=8000)
-#     args = parser.parse_args()
-#     main(host=args.host, port=args.port)
