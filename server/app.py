@@ -60,19 +60,29 @@ app = create_app(
     CodeReviewAction,
     CodeReviewObservation,
     env_name="code_review",
-    max_concurrent_envs=100,
+    max_concurrent_envs=100,  # increase this number to allow more concurrent WebSocket sessions
 )
 
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
 def main():
-    """Main entry point for running the server."""
+    """
+    Entry point for direct execution via uv run or python -m.
+
+    This function enables running the server without Docker:
+        uv run --project . server
+        uv run --project . server --port 8001
+        python -m code_review.server.app
+
+    Args:
+        host: Host address to bind to (default: "0.0.0.0")
+        port: Port number to listen on (default: 8000)
+
+    For production deployments, consider using uvicorn directly with
+    multiple workers:
+        uvicorn code_review.server.app:app --workers 4
+    """
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
-if __name__ == "__main__":
+if __name__=='__main__':
     main()
