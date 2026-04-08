@@ -4,12 +4,7 @@ import json
 import textwrap
 from typing import List, Optional, TYPE_CHECKING
 import asyncio
-from dotenv import load_dotenv
 
-# Load environment variables from the .env file
-load_dotenv()
-
-# Changed from google.genai to openai
 from openai import OpenAI
 
 # Import the Code Review specific client and models
