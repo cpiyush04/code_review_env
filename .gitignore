@@ -1,0 +1,39 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+# uv
+.uv/
+
+# Build and Distribution
+dist/
+build/
+*.egg-info/
+
+# Configuration and Secrets
+.env
+.env.*
+!.env.example
+
+# IDEs
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+./__pycache__
+./server/__pycache__
