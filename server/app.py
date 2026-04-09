@@ -38,6 +38,7 @@ except Exception as e:  # pragma: no cover
 import os
 import sys
 from typing import TYPE_CHECKING
+import uvicorn
 
 if TYPE_CHECKING:
     from models import CodeReviewAction, CodeReviewObservation  # type: ignore
@@ -63,26 +64,9 @@ app = create_app(
     max_concurrent_envs=100,  # increase this number to allow more concurrent WebSocket sessions
 )
 
-def main():
-    """
-    Entry point for direct execution via uv run or python -m.
+def main() -> None:
+    uvicorn.run("app:app", host="0.0.0.0", port=7860)
 
-    This function enables running the server without Docker:
-        uv run --project . server
-        uv run --project . server --port 8001
-        python -m code_review.server.app
 
-    Args:
-        host: Host address to bind to (default: "0.0.0.0")
-        port: Port number to listen on (default: 8000)
-
-    For production deployments, consider using uvicorn directly with
-    multiple workers:
-        uvicorn code_review.server.app:app --workers 4
-    """
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-if __name__=='__main__':
+if __name__ == "__main__":
     main()
