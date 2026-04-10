@@ -142,8 +142,8 @@ class CodeReviewEnvironment(Environment):
             reward -= 0.05
 
         self.total_reward += reward
-        # Clamp reward between 0 and 1 for the final OpenEnv grader spec
-        normalized_reward = max(0.0, min(1.0, self.total_reward))
+
+        normalized_reward = max(0.01, min(0.99, self.total_reward))
 
         obs = self._build_obs(status, current_view)
         
