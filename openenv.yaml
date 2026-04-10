@@ -5,3 +5,78 @@ runtime: fastapi
 app: server.app:app
 port: 8000
 
+description: >
+  An OpenEnv-compliant environment for automated PR review.
+  An LLM agent receives a pull request containing a title, description, 
+  and changed files. The agent must explore the files, identify bugs 
+  (typos, hardcoded secrets, security vulnerabilities), add specific 
+  comments, and ultimately decide to approve or request changes.
+version: "1.0.0"
+author: BBhunts
+
+observation_space:
+  type: text
+  description: >
+    Natural language representation of the PR state, including the PR 
+    title, description, list of changed files, the contents of the 
+    currently viewed file, any active comments made by the agent, 
+    and system status messages indicating success or failure of actions.
+
+action_space:
+  type: discrete_with_arguments
+  actions:
+    - list_files
+    - view_file
+    - add_comment
+    - submit_review
+  description: >
+    Commands to interact with the PR. The agent can list available files, 
+    view the contents of a specific file, add a comment to a specific line, 
+    and submit the final review (either 'approve' or 'request_changes').
+
+endpoints:
+  health: /
+  reset:  /reset
+  step:   /step
+  state:  /state
+
+tasks:
+  - id: easy
+    description: >
+      Fix simple typo in helper function. 
+      The PR adds a new math helper but contains a syntax typo ('retun').
+      Correct action: Identify bug in math_helpers.py on line 2, request_changes.
+    ideal_action: request_changes
+
+  - id: medium
+    description: >
+      Add Database Config.
+      The PR adds database connection strings for production but exposes a 
+      hardcoded password.
+      Correct action: Identify bug in config.py on line 4, request_changes.
+    ideal_action: request_changes
+
+  - id: hard
+    description: >
+      User login feature.
+      The PR adds a login endpoint but the SQL query is built using f-strings, 
+      creating a severe SQL Injection vulnerability.
+      Correct action: Identify bug in auth.py on line 4, request_changes.
+    ideal_action: request_changes
+
+  - id: task_4
+    description: >
+      Fourth custom task added to the environment.
+      Agent must review the provided files and determine if the code meets 
+      quality standards or contains hidden bugs.
+    ideal_action: request_changes
+
+scoring:
+  reward_range: [0.01, 0.99]
+  success_threshold: 0.7
+  score_formula: cumulative_reward_with_rubric_clamping
+
+constraints:
+  max_runtime_seconds: 1200
+  max_memory_gb: 8
+  max_vcpu: 2

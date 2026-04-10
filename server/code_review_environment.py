@@ -24,7 +24,7 @@ else:
             sys.path.insert(0, parent_dir)
         from models import CodeReviewAction, CodeReviewObservation, ReviewComment
 
-# --- Define the 3 Hackathon Tasks ---
+# --- Define the 3 Hackathon Tasks ---# --- Define the 4 Hackathon Tasks ---
 TASKS = {
     "easy": {
         "title": "Fix simple typo in helper function",
@@ -55,6 +55,16 @@ TASKS = {
         "bug_file": "auth.py",
         "bug_line": 4,
         "should_approve": False
+    },
+    "expert": {
+        "title": "Add average calculation utility",
+        "description": "Implemented a quick helper to calculate the mean of a list. Please review.",
+        "files": {
+            "stats.py": "1: def calculate_average(numbers):\n2:     if not numbers:\n3:         return 0.0\n4:     total = sum(numbers)\n5:     return total / (len(numbers) - 1)  # Logic Error: should be divided by len(numbers)"
+        },
+        "bug_file": "stats.py",
+        "bug_line": 5,
+        "should_approve": False
     }
 }
 
@@ -71,9 +81,24 @@ class CodeReviewEnvironment(Environment):
     @property
     def tasks(self) -> list[str]:
         return list(TASKS.keys())
-
-    def reset(self, task_name: str = None) -> CodeReviewObservation:
-        self._state = State(episode_id=str(uuid4()), step_count=0)
+# CHANGE THIS:
+    # def reset(self, task_name: str = None) -> CodeReviewObservation:
+    
+    # TO THIS:
+    def reset(
+        self, 
+        seed: int | None = None, 
+        episode_id: str | None = None, 
+        **kwargs
+    ) -> CodeReviewObservation:
+        
+        new_episode_id = episode_id if episode_id is not None else str(uuid4())
+        self._state = State(episode_id=new_episode_id, step_count=0)
+        
+        if seed is not None:
+            random.seed(seed)
+            
+        task_name = kwargs.get("task_name")
         
         # Select task (random if not specified, allows iterating through all 3)
         level = task_name if task_name in TASKS else random.choice(list(TASKS.keys()))
@@ -85,7 +110,15 @@ class CodeReviewEnvironment(Environment):
         
         return self._build_obs(f"Loaded {level} task. Type 'list_files' to begin.")
 
-    def step(self, action: CodeReviewAction) -> CodeReviewObservation:
+    def step(
+        self, 
+        action: CodeReviewAction, 
+        timeout_s: float | None = None, 
+        **kwargs
+    ) -> CodeReviewObservation:
+        
+        self._state.step_count += 1
+        # ... rest of your step logic ...
         self._state.step_count += 1
         reward = 0.0
         done = False
