@@ -64,7 +64,7 @@ tasks:
       Correct action: Identify bug in auth.py on line 4, request_changes.
     ideal_action: request_changes
 
-  - id: task_4
+  - id: expert
     description: >
       Fourth custom task added to the environment.
       Agent must review the provided files and determine if the code meets 
@@ -73,7 +73,7 @@ tasks:
 
 scoring:
   reward_range: [0.01, 0.99]
-  success_threshold: 0.7
+  success_threshold: 0.8
   score_formula: cumulative_reward_with_rubric_clamping
 
 constraints:
