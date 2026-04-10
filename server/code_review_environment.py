@@ -67,12 +67,16 @@ class CodeReviewEnvironment(Environment):
         self.comments = []
         self.found_bug = False
         self.total_reward = 0.0
+    
+    @property
+    def tasks(self) -> list[str]:
+        return list(TASKS.keys())
 
-    def reset(self, task_level: str = None) -> CodeReviewObservation:
+    def reset(self, task_name: str = None) -> CodeReviewObservation:
         self._state = State(episode_id=str(uuid4()), step_count=0)
         
         # Select task (random if not specified, allows iterating through all 3)
-        level = task_level if task_level in TASKS else random.choice(list(TASKS.keys()))
+        level = task_name if task_name in TASKS else random.choice(list(TASKS.keys()))
         self.current_task = TASKS[level]
         self.comments = []
         self.found_bug = False
@@ -155,6 +159,8 @@ class CodeReviewEnvironment(Environment):
         return obs
 
     def _build_obs(self, status_message: str, current_view: str = "No file currently viewed.") -> CodeReviewObservation:
+        safe_reward = max(0.01, min(0.99, self.total_reward))
+        
         return CodeReviewObservation(
             pr_title=self.current_task["title"],
             pr_description=self.current_task["description"],
@@ -164,7 +170,7 @@ class CodeReviewEnvironment(Environment):
             status_message=status_message,
             task_difficulty=self.task_level,
             done=False,
-            reward=0.0
+            reward=safe_reward
         )
 
     @property
