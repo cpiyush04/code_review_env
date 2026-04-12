@@ -176,7 +176,8 @@ async def main() -> None:
                     break
 
             score = sum(rewards)
-            score = min(max(score, 0.0), 1.0)
+            # Strict hackathon clamping to ensure score is within (0, 1)
+            score = min(max(float(score), 0.01), 0.99)
             success = score >= SUCCESS_SCORE_THRESHOLD
             
             log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
