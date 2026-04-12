@@ -78,7 +78,7 @@ def main(host: str = "0.0.0.0", port: int = 8000):
     multiple workers:
         uvicorn code_review.server.app:app --workers 4
     """
-    import uvicorn
+    
     uvicorn.run(app, host=host, port=port)
 
 

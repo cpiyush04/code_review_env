@@ -110,75 +110,82 @@ async def main() -> None:
     else:
         env = CodeReviewEnv(base_url="http://localhost:8000")
 
-    history: List[str] = []
-    rewards: List[float] = []
-    steps_taken = 0
-    score = 0.0
-    success = False
-
-    log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
+    # Define the tasks you want to run (matching the keys in TASKS)
+    task_levels = ["easy", "medium", "hard", "expert"]
 
     try:
-        result = await env.reset() 
-        obs = result.observation
-        last_reward = 0.0
-
-        for step in range(1, MAX_STEPS + 1):
-            if result.done:
-                break
-
-            obs_dict = {
-                "pr_title": obs.pr_title,
-                "pr_description": obs.pr_description,
-                "changed_files": obs.changed_files,
-                "current_file_view": obs.current_file_view,
-                "status_message": obs.status_message,
-                "task_difficulty": obs.task_difficulty
-            }
-
-            raw_action = get_model_message(client, step, obs_dict, last_reward, history)
+        for task_level in task_levels:
+            print(f"\n========== STARTING TASK: {task_level} ==========")
             
-            error = None
-            action_obj = None
+            history: List[str] = []
+            rewards: List[float] = []
+            steps_taken = 0
+            score = 0.0
+            success = False
+
+            log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
             
-            try:
-                action_dict = json.loads(raw_action)
-                action_obj = CodeReviewAction(**action_dict)
-            except Exception as e:
-                error = f"Invalid JSON or Action Format: {str(e)}"
-                action_obj = CodeReviewAction(command="list_files")
+            # Pass the specific task_name to reset()
+            result = await env.reset(task_name=task_level) 
+            obs = result.observation
+            last_reward = 0.0
 
-            try:
-                result = await env.step(action_obj)
-                obs = result.observation
-                reward = result.reward or 0.0
-                done = result.done
-            except Exception as e:
-                error = f"Env step failed: {str(e)}"
-                reward = 0.0
-                done = True
+            for step in range(1, MAX_STEPS + 1):
+                if result.done:
+                    break
 
-            rewards.append(reward)
-            steps_taken = step
-            last_reward = reward
+                obs_dict = {
+                    "pr_title": obs.pr_title,
+                    "pr_description": obs.pr_description,
+                    "changed_files": obs.changed_files,
+                    "current_file_view": obs.current_file_view,
+                    "status_message": obs.status_message,
+                    "task_difficulty": obs.task_difficulty
+                }
 
-            log_step(step=step, action=raw_action, reward=reward, done=done, error=error)
-            history.append(f"Step {step}: {raw_action} -> reward {reward:+.2f}")
+                raw_action = get_model_message(client, step, obs_dict, last_reward, history)
+                
+                error = None
+                action_obj = None
+                
+                try:
+                    action_dict = json.loads(raw_action)
+                    action_obj = CodeReviewAction(**action_dict)
+                except Exception as e:
+                    error = f"Invalid JSON or Action Format: {str(e)}"
+                    action_obj = CodeReviewAction(command="list_files")
 
-            if done:
-                break
+                try:
+                    result = await env.step(action_obj)
+                    obs = result.observation
+                    reward = result.reward or 0.0
+                    done = result.done
+                except Exception as e:
+                    error = f"Env step failed: {str(e)}"
+                    reward = 0.0
+                    done = True
 
-        score = sum(rewards)
-        score = min(max(score, 0.0), 1.0)
-        success = score >= SUCCESS_SCORE_THRESHOLD
+                rewards.append(reward)
+                steps_taken = step
+                last_reward = reward
+
+                log_step(step=step, action=raw_action, reward=reward, done=done, error=error)
+                history.append(f"Step {step}: {raw_action} -> reward {reward:+.2f}")
+
+                if done:
+                    break
+
+            score = sum(rewards)
+            score = min(max(score, 0.0), 1.0)
+            success = score >= SUCCESS_SCORE_THRESHOLD
+            
+            log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
     finally:
         try:
             await env.close()
         except Exception as e:
             print(f"[DEBUG] env.close() error: {e}", flush=True)
-            
-        log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
 
 if __name__ == "__main__":
     asyncio.run(main())
